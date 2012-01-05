@@ -1,0 +1,94 @@
+/*
+ * ExprEval.jj
+ *
+ * Daniel Diaz - 2007
+ *
+ * Evaluateur d'expressions arithmétiques en JavaCC.
+ *
+ */
+
+PARSER_BEGIN(ExprEval)
+package javacc.progs;
+
+    public class ExprEval {
+	public static void main(String args[]) throws ParseException {
+            ExprEval syn = new ExprEval(System.in);
+
+            System.out.print("entrer une expression: ");
+            int res = syn.evalue();
+            System.out.println("resultat = " + res);
+        }
+    }
+
+PARSER_END(ExprEval)
+
+
+/* Partie syntaxique
+ *
+ * On ajoute une règle qui tient lieu d'axiome
+ * pour s'assurer qu'il y a bien un \n à la fin de l'expression.
+ *
+ * Chaque règle retourne l'entier résultant de la sous-expression
+ * qu'elle vient d'analyser.
+ */
+
+    // regle additionnelle: evalue -> expression \n
+    // pour s'assurer qu'il y a bien un \n à la fin de l'expression
+int evalue() :  
+                                                    { int x; }
+{
+    x = expression() "\n"                           { return x; }
+}
+
+
+    // expression -> terme { + terme | - terme }
+int expression() : 
+                                                    { int x, y; }
+{
+    x = terme()
+    (   "+"  y = terme()                            { x = x + y; }
+    |   "-"  y = terme()                            { x = x - y; }
+    )*
+                                                    { return x; }
+}
+
+
+    // terme -> facteur { * facteur | / facteur }
+int terme() :
+                                                    { int x, y; }
+{
+    x = facteur()
+    (   "*"  y = facteur()                          { x = x * y; }
+    |	"/"  y = facteur()                          { x = x / y; }
+    )*
+                                                    { return x; }
+}
+
+
+    // facteur -> ( expression ) | entier
+int facteur() :
+                                                    { int x; Token t; }
+{
+
+    ( 	"("  x = expression()  ")"
+    |   t = <ENTIER>                                { x = Integer.parseInt(t.image); }
+    )
+                                                    { return x; }
+}
+
+
+/* Partie lexicale
+ * 
+ * Les unités constantes sont directement référencées dans les règles.
+ * On ne décrit donc que les séparateurs et les unités non constantes.
+ */
+
+SKIP : 
+{ " " | "\t" | "\r" }
+
+
+TOKEN :
+{ 
+    < ENTIER: ( ["0"-"9"] )+ >
+}
+

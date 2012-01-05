@@ -1,0 +1,83 @@
+/*
+ * ExprVerif.jj
+ *
+ * Daniel Diaz - 2007
+ *
+ * Expressions arithmétiques en JavaCC: vérification de la syntaxe.
+ */
+
+PARSER_BEGIN(ExprVerif)
+package javacc.progs;
+
+    public class ExprVerif {
+	public static void main(String args[]) throws ParseException {
+            ExprVerif syn = new ExprVerif(System.in);
+
+            System.out.print("entrer une expression: ");
+            syn.verifie();
+            System.out.println("syntaxe correcte");
+        }
+    }
+
+PARSER_END(ExprVerif)
+
+/* Partie syntaxique
+ *
+ * On ajoute une règle qui tient lieu d'axiome
+ * pour s'assurer qu'il y a bien un \n à la fin de l'expression.
+ */
+
+    // regle additionnelle: verif -> expression \n
+    // pour s'assurer qu'il y a bien un \n à la fin de l'expression
+void verifie() :  
+{}
+{
+    expression() "\n"
+}
+
+
+    // expression -> terme { + terme | - terme }
+void expression() : 
+{}
+{
+    terme()
+    (   "+"  terme()
+    |   "-"  terme()
+    )*
+}
+
+
+    // terme -> facteur { * facteur | / facteur }
+void terme() :
+{}
+{
+    facteur()
+    (   "*"  facteur()
+    |	"/"  facteur()
+    )*
+}
+
+
+    // facteur -> ( expression ) | entier
+void facteur() :
+{}
+{
+     	"("  expression()  ")"
+    |   <ENTIER>
+}
+
+
+/* Partie lexicale
+ * 
+ * Les unités constantes sont directement référencées dans les règles.
+ * On ne décrit donc que les séparateurs et les unités non constantes.
+ */
+
+SKIP :
+{ " " | "\t" | "\r" }
+
+
+TOKEN :
+{ 
+    < ENTIER: ( ["0"-"9"] )+ >
+}

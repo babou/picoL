@@ -1,0 +1,111 @@
+/*
+ * ExprArbre.jj
+ *
+ * Daniel Diaz - 2007
+ *
+ * Expressions arithmetiques en JavaCC: création Arbre Syntaxe Abstraite.
+ */
+
+options {
+   OUTPUT_DIRECTORY = "../jjgener";
+}
+
+PARSER_BEGIN(ExprArbre)
+
+   package javacc.progs.jjgener;
+
+    import javacc.progs.asa.*;
+
+    public class ExprArbre {
+	public static void main(String args[]) throws ParseException {
+            ExprArbre syn = new ExprArbre(System.in);
+
+            System.out.println("entrer une expression: ");
+            ASAExpr a = syn.parse();
+            System.out.println("arbre:\n");
+            System.out.println(a.notationExplorateur());
+            System.out.println("Žvaluation: ");
+            System.out.println(a.evalue());
+        }
+    }
+
+PARSER_END(ExprArbre)
+
+
+/* Partie syntaxique
+ *
+ * On ajoute une règle qui tient lieu d'axiome
+ * pour s'assurer qu'il y a bien un \n à la fin de l'expression.
+ *
+ * Chaque règle retourne l'ASA associé à la sous-expression
+ * qu'elle vient d'analyser.
+ */
+
+    // regle additionnelle: parse -> expression \n
+    // pour s'assurer qu'il y a bien un \n à la fin de l'expression
+ASAExpr parse() :  
+                                                    { ASAExpr x; }
+{
+    x = expression() "\n"                           { return x; }
+}
+
+
+    // expression -> terme { + terme | - terme }
+ASAExpr expression() : 
+                                                    { ASAExpr x, y; }
+{
+    	  x = terme() 
+    (
+    	"+"  y = terme()                            { x = new ASAExprPlus(x, y); }
+  	| 	"-"  y = terme()                            { x = new ASAExprMoins(x, y); }
+    )*                                            	{ return x; }
+}
+
+
+    // terme -> facteur { * facteur | / facteur }
+ASAExpr terme() :
+                                                    { ASAExpr x, y; }
+{
+    x = facteur()
+    (   "*"  y = facteur()                          { x = new ASAExprMult(x, y); }
+    |	"/"  y = facteur()                          { x = new ASAExprDivis(x, y); }
+    |	"%"	 y = facteur()                          { x = new ASAExprMod(x, y); }
+    )*
+                                                    { return x; }
+}
+
+ASAExpr facteur():
+													{ASAExpr x;}{
+	(    	x = primaire()								{}	|	"-" x = primaire()							{x = new ASAExprOpp(x);}
+	)
+													{return x;}
+}	
+
+
+    // facteur -> ( expression ) | entier
+ASAExpr primaire() :
+                                                    { ASAExpr x; Token t; }
+{
+    ( 	"("  x = expression()	")"
+    |   t = <ENTIER>                                { x = new ASAExprEntier(Integer.parseInt(t.image)); }
+    |	t = <IDENT>									{ x = new ASAExprIdent(t.image); }
+    )
+                                                    { return x; }
+}
+
+
+/* Partie lexicale
+ * 
+ * Les unités constantes sont directement référencées dans les règles.
+ * On ne décrit donc que les séparateurs et les unités non constantes.
+ */
+
+SKIP : 
+{ " " | "\t" | "\r" }
+
+
+TOKEN :
+{ 
+   	< ENTIER:	( ["0"-"9"] )+ >
+|	< IDENT:	( ["a"-"z","A"-"Z","_"] ( ["0"-"9","a"-"z","A"-"Z","_"] )* ) >
+}

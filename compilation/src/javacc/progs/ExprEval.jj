@@ -10,8 +10,10 @@
 PARSER_BEGIN(ExprEval)
 package javacc.progs;
 
-    public class ExprEval {
-	public static void main(String args[]) throws ParseException {
+    public class ExprEval
+    {
+		public static void main(String args[]) throws ParseException
+		{
             ExprEval syn = new ExprEval(System.in);
 
             System.out.print("entrer une expression: ");

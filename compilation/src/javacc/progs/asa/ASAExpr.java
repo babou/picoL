@@ -3,7 +3,6 @@
  * Daniel Diaz - 2007
  * Arbre Syntaxe Abstraite pour les expressions.
  */
-
 package javacc.progs.asa;
 
 /**
